@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>リダイレクト中...</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #4e73df, #1cc88a);
+      color: white;
+      animation: fadeIn 0.8s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #container {
+      text-align: center;
+      max-width: 400px;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 1rem; }
+    #message { margin-bottom: 1.5rem; line-height: 1.6; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    button {
+      padding: 0.6em 1.5em; font-size: 1em; cursor: pointer; border: none;
+      border-radius: 999px; background: white; color: #4e73df;
+      font-weight: bold; transition: all 0.2s ease; display: none;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+    a { color: #fff; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>ページを開いています…</h1>
+    <div class="spinner" id="spinner"></div>
+    <p id="message">新しいタブを準備しています。</p>
+    <button id="goButton">開く</button>
+  </div>
+
+  <script>
+    let frameHtml = '';
+    // 修正ポイント: 完全に置き換えられるようパスを指定
+    const PROXY_FRAME_PATH = '/proxy-frame.html';
+    const REDIRECT_TARGET = 'https://www.google.com';
+
+    function openProxyTab() {
+      try {
+        const tab = window.open('about:blank', '_blank');
+        if (!tab) return false;
+
+        const baseUrl = location.origin;
+        // <head>の直後に<base>タグを挿入して、新しいタブ内でもJS/CSSのパスが通るようにする
+        const htmlWithBase = frameHtml.replace(
+          /<head>/i,
+          `<head><base href="${baseUrl}/">`
+        );
+
+        tab.document.open();
+        tab.document.write(htmlWithBase);
+        tab.document.close();
+        return true;
+      } catch (e) {
+        console.error('openProxyTab error', e);
+        return false;
+      }
+    }
+
+    (function init() {
+      const msg = document.getElementById('message');
+      const button = document.getElementById('goButton');
+      const spinner = document.getElementById('spinner');
+
+      fetch(PROXY_FRAME_PATH)
+        .then(res => {
+          if (!res.ok) throw new Error('fetch failed: ' + res.status);
+          return res.text();
+        })
+        .then(html => {
+          frameHtml = html;
+          const opened = openProxyTab();
+
+          if (opened) {
+            msg.textContent = "準備完了。リダイレクトします…";
+            setTimeout(() => { window.location.replace(REDIRECT_TARGET); }, 800);
+          } else {
+            spinner.style.display = "none";
+            msg.textContent = "ポップアップがブロックされました。ボタンを押して開始してください。";
+            button.style.display = "inline-block";
+            button.onclick = () => {
+              if (openProxyTab()) window.location.replace(REDIRECT_TARGET);
+            };
+          }
+        })
+        .catch(err => {
+          spinner.style.display = "none";
+          msg.innerHTML = '読み込み失敗。ファイルが存在するか確認してください。<br><a href="'+PROXY_FRAME_PATH+'" target="_blank">直接開く</a>';
+        });
+    })();
+  </script>
+</body>
+</html>
