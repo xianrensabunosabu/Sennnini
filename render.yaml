@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: stealth-proxy-server
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.x
+      - key: PORT
+        value: 10000
+    # ヘルスチェックの設定（起動確認用）
+    healthCheckPath: /
+    # プロキシとしての動作を安定させるための設定
+    numInstances: 1
