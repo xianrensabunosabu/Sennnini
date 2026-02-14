@@ -1,0 +1,27 @@
+{
+  "name": "proxy",
+  "version": "1.0.0",
+  "description": "Stealth Proxy Server with Bare Server and IP Spoofing",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "keywords": [
+    "ultraviolet",
+    "proxy",
+    "bare-server",
+    "stealth"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tomphttp/bare-server-node": "^2.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
